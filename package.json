@@ -1,0 +1,19 @@
+{
+  "name": "image-resizer-electron",
+  "productName": "Image Resizer",
+  "version": "1.0.0",
+  "description": "hello world",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "author": "Kelalech Omar",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^28.1.0"
+  },
+  "dependencies": {
+    "toastify-js": "^1.12.0"
+  }
+}
