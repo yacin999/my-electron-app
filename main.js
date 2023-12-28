@@ -3,33 +3,23 @@ const fs = require("fs")
 const resizeImg = require("resize-img")
 const { app, BrowserWindow, ipcMain, Menu, shell } = require('electron')
 const path = require('node:path')
-// import {app, BrowserWindow} from "electron"
 
-// const createWindow = () => {
-//   const win = new BrowserWindow({
-//     width: 800,
-//     height: 600,
-//     webPreferences: {
-//         preload: path.join(__dirname, 'preload.js')
-//       }
-//   })
-
-//   win.loadFile('index.html')
-// }
 
 
 const isDev = process.env.NODE_ENV !== "production"
 const isMac = process.platform === 'darwin'
+let mainWindow;
 // create the main window
 function createMainWindow () {
-    const mainWindow = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         title : 'Image Resizer',
         width : isDev ? 1000 : 500,
         height : 600,
         webPreferences : {
             contextIsolation : true,
             nodeIntegration : true,
-            preload : path.join(__dirname, 'preload.js')
+            preload : path.join(__dirname, 'preload.js'),
+            spellcheck: true
         }
     })
 
@@ -40,7 +30,6 @@ function createMainWindow () {
         mainWindow.webContents.openDevTools()
     }
     mainWindow.loadFile(path.join(__dirname, './renderer/index.html'))
-    return mainWindow
 }
 
 
@@ -57,13 +46,14 @@ function createAboutWindow () {
 // when app is ready:
 app.whenReady().then(() => {
     // ipcMain.handle('ping', () => 'pong')
-    const mainWindow = createMainWindow()
+    createMainWindow()
 
 
     // Implement Menu
-    const mainMenu = Menu.buildFromTemplate(createMenuTemplate(mainWindow))
+    const mainMenu = Menu.buildFromTemplate(menu)
     Menu.setApplicationMenu(mainMenu)
 
+    mainWindow.on("closed", ()=> (mainWindow = null))
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createMainWindow()
@@ -72,7 +62,7 @@ app.whenReady().then(() => {
 
 
 // Menu Template
-function createMenuTemplate(window) {
+
 const menu = [
     ...(isMac ? [{
         label : app.name,
@@ -97,11 +87,10 @@ const menu = [
     }] : []),
     {
         label : "DevTools",
-        click : () =>window.webContents.openDevTools()
+        click : () =>mainWindow.webContents.openDevTools(),
     }
 ]
-    return menu
-}
+
 
 // Respond to ipcRenderer
 ipcMain.on("image:resize", (e, options)=>{
@@ -120,7 +109,7 @@ async function resizeImage({width, height, imgPath, dest}){
         const filename = path.basename(imgPath)
 
         // create file dest if not exists
-        if (fs.existsSync(dest)){
+        if (!fs.existsSync(dest)){
             fs.mkdirSync(dest)
         }
 
@@ -128,7 +117,7 @@ async function resizeImage({width, height, imgPath, dest}){
         fs.writeFileSync(path.join(dest, filename), newPath)
 
         // Send Success to render
-        
+        mainWindow.webContents.send("image:done")
         // Open dest folder
         shell.openPath(dest)
 

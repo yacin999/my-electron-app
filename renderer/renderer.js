@@ -54,6 +54,11 @@ function sendImage(e){
   })
 }
 
+// Catch the image:done event
+ipcRenderer.on("image:done", ()=>{
+  alertSuccess("your image resizerd successfuly !")
+})
+
 
 function alertError (message) {
   Toastify.toast({
@@ -71,7 +76,7 @@ function alertError (message) {
 function alertSuccess (message) {
   Toastify.toast({
     text : message,
-    duration : 2000,
+    duration : 3000,
     close : false,
     style : {
       background : 'green',
